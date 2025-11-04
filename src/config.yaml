@@ -1,0 +1,21 @@
+data_path: "C:/Users/nicot/Desktop/Prueba tecnica 2/Datos/sentencias_pasadas.xlsx"
+
+id_col: "Providencia"
+text_fields: ["Tema - subtema", "resuelve", "sintesis"]  
+
+chroma:
+  persist_dir: "C:/Users/nicot/Desktop/Prueba tecnica 2/.chroma"
+  collection: "sentencias_lex"
+  metric: "cosine"
+
+embedding_model: "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+
+retrieval:
+  k: 15
+  distance_max: 0.80
+  min_hits: 1
+
+synonyms:
+  "acoso escolar": ["bullying","hostigamiento escolar","matoneo"]
+  "piar": ["plan individual de ajustes razonables","ajustes razonables","inclusión educativa","discapacidad"]
+  "redes sociales": ["facebook","instagram","tiktok","twitter","x","youtube","whatsapp","red social"]
