@@ -19,8 +19,8 @@ pip install -r requirements.txt
 python -m src.ingest_index
 python -m src.qa --q "acoso escolar" --debug
 
+--- 
 
-<details> <summary>Usar venv (opcional)</summary>
 # crear y activar entorno
 python -m venv .venv
 # Windows
@@ -28,9 +28,9 @@ python -m venv .venv
 # macOS/Linux
 source .venv/bin/activate
 
-</details>
+---
 
-🗂️ Estructura del repositorio
+##  🗂️ Estructura del repositorio
 .
 ├─ .chroma/                     # índice persistente (se genera al indexar)
 ├─ Caso/
@@ -46,6 +46,8 @@ source .venv/bin/activate
 ├─ README.md
 └─ requirements.txt
 
+---
+
 # 1) Instalar dependencias
 pip install -r requirements.txt
 
@@ -60,7 +62,9 @@ python -m src.qa --q "acoso escolar" --debug
 python -m src.qa --q "PIAR" --debug
 python -m src.qa --q "redes sociales" --debug
 
-Tip: si recuperas pocos resultados, sube retrieval.distance_max a 0.40 y/o retrieval.k a 10–12.
+---
+
+## Tip: si recuperas pocos resultados, sube retrieval.distance_max a 0.40 y/o retrieval.k a 10–12.
 
 🧠 Cómo funciona 
 
@@ -74,7 +78,9 @@ Consulta: expansión de sinónimos, top-k y filtrado por umbral distance_max.
 
 Respuesta: plantilla en lenguaje simple con bullets (usa metadatos como m_Tema - subtema y m_síntesis) + lista de Fuentes con ID y distancia.
 
-Informe (con resultados reales pegados)
+---
+
+## Informe 
 1) Explicación del caso
 
 PoC para responder en lenguaje coloquial preguntas sobre demandas y sentencias asociadas a redes sociales a partir de un Excel. La salida incluye evidencia trazable (IDs y distancias) para validación rápida.
