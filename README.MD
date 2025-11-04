@@ -18,25 +18,33 @@
 pip install -r requirements.txt
 python -m src.ingest_index
 python -m src.qa --q "acoso escolar" --debug
+```
 
---- 
+<details>
+<summary>Usar venv (opcional)</summary>
 
+```bash
 # crear y activar entorno
 python -m venv .venv
 # Windows
 .venv\Scripts\activate
 # macOS/Linux
 source .venv/bin/activate
+```
+</details>
 
 ---
 
-##  🗂️ Estructura del repositorio
+## 🗂️ Estructura del repositorio
+
+```
 .
 ├─ .chroma/                     # índice persistente (se genera al indexar)
 ├─ Caso/
 │  └─ Caso de consultoria 2.pdf
 ├─ Datos/
 │  └─ sentencias_pasadas.xlsx
+├─ Resultados/                  # (opcional) salidas/capturas
 ├─ src/
 │  ├─ config.yaml               # configuración (ruta, modelo, sinónimos, umbrales)
 │  ├─ ingest_index.py           # indexa el Excel en ChromaDB
@@ -45,9 +53,46 @@ source .venv/bin/activate
 │  └─ utils.py                  # helpers: load_config, limpieza, sinónimos
 ├─ README.md
 └─ requirements.txt
+```
 
 ---
 
+## ⚙️ Configuración (resumen)
+
+Edita `src/config.yaml` según los nombres reales de tus columnas. Ejemplo:
+
+```yaml
+data_path: "Datos/sentencias_pasadas.xlsx"
+id_col: "ID"                   # o "Radicado", etc.
+text_fields:
+  - "Tema - subtema"
+  - "Hechos"
+  - "síntesis"                 # si es "sintesis" en tu archivo, cámbialo
+  - "Sentencia"
+
+embedding_model: "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+
+chroma:
+  persist_dir: ".chroma"
+  collection: "sentencias_lex"
+  metric: "cosine"
+
+retrieval:
+  k: 8
+  min_hits: 1
+  distance_max: 0.35          # menor = más estricto
+
+synonyms:
+  "acoso escolar": ["bullying", "matoneo", "hostigamiento escolar", "violencia escolar"]
+  "piar": ["plan individual de ajustes razonables", "ajustes razonables", "inclusión educativa", "discapacidad", "NEE"]
+  "redes sociales": ["facebook", "instagram", "tiktok", "x", "twitter", "red social"]
+```
+
+---
+
+## ▶️ Cómo ejecutar
+
+```bash
 # 1) Instalar dependencias
 pip install -r requirements.txt
 
@@ -61,49 +106,42 @@ python -m src.debug_chroma
 python -m src.qa --q "acoso escolar" --debug
 python -m src.qa --q "PIAR" --debug
 python -m src.qa --q "redes sociales" --debug
+```
+
+> Tip: si recuperas pocos resultados, sube `retrieval.distance_max` a `0.40` y/o `retrieval.k` a `10–12`.
 
 ---
 
-## Tip: si recuperas pocos resultados, sube retrieval.distance_max a 0.40 y/o retrieval.k a 10–12.
+## 🧠 Cómo funciona (resumen técnico)
 
-🧠 Cómo funciona 
-
-Indexación: se concatenan los campos listados en text_fields y se guardan como documento + metadatos (m_<campo>).
-
-Embeddings: paraphrase-multilingual-mpnet-base-v2 (robusto en español).
-
-Vector DB: ChromaDB persistente (HNSW, métrica cosine).
-
-Consulta: expansión de sinónimos, top-k y filtrado por umbral distance_max.
-
-Respuesta: plantilla en lenguaje simple con bullets (usa metadatos como m_Tema - subtema y m_síntesis) + lista de Fuentes con ID y distancia.
+- **Indexación**: se concatenan los campos listados en `text_fields` y se guardan como documento + metadatos (`m_<campo>`).
+- **Embeddings**: `paraphrase-multilingual-mpnet-base-v2` (robusto en español).
+- **Vector DB**: ChromaDB persistente (HNSW, métrica `cosine`).
+- **Consulta**: expansión de sinónimos, top-k y filtrado por umbral `distance_max`.
+- **Respuesta**: plantilla en lenguaje simple con bullets (usa metadatos como `m_Tema - subtema` y `m_síntesis`) + lista de **Fuentes** con ID y distancia.
 
 ---
 
-## Informe 
-1) Explicación del caso
+## 📊 Informe (con resultados reales pegados)
 
-PoC para responder en lenguaje coloquial preguntas sobre demandas y sentencias asociadas a redes sociales a partir de un Excel. La salida incluye evidencia trazable (IDs y distancias) para validación rápida.
+### 1) Explicación del caso
+PoC para responder en lenguaje coloquial preguntas sobre **demandas y sentencias asociadas a redes sociales** a partir de un **Excel**. La salida incluye **evidencia trazable** (IDs y distancias) para validación rápida.
 
-2) Supuestos
+### 2) Supuestos
+- El Excel incluye un identificador (`id_col`) y campos de texto relevantes (Tema/Hechos/Síntesis/Sentencia).
+- La respuesta se construye a partir de los documentos recuperados (RAG “ligero”, sin LLM remoto).
+- Idioma principal: español con variaciones; se usan sinónimos.
 
-El Excel incluye un identificador (id_col) y campos de texto relevantes (Tema/Hechos/Síntesis/Sentencia).
+### 3) Formas para resolver el caso y opción tomada
+- **Alternativas**: (1) TF-IDF/regex; (2) **Embeddings + ChromaDB** ✅; (3) RAG con re-ranking + LLM; (4) Clasificación/finetuning.
+- **Elegida**: (2) por equilibrio entre precisión, reproducibilidad y evidencia trazable.
 
-La respuesta se construye a partir de los documentos recuperados (RAG “ligero”, sin LLM remoto).
+### 4) Resultados del análisis de los datos y los modelos
 
-Idioma principal: español con variaciones; se usan sinónimos.
+**Acoso escolar — sentencia y detalle**  
+_(comando: `python -m src.qa --q "acoso escolar" --debug`)_
 
-3) Formas para resolver el caso y opción tomada
-
-Alternativas: (1) TF-IDF/regex; (2) Embeddings + ChromaDB ✅; (3) RAG con re-ranking + LLM; (4) Clasificación/finetuning.
-
-Elegida: (2) por equilibrio entre precisión, reproducibilidad y evidencia trazable.
-
-4) Resultados del análisis de los datos y los modelos
-
-Acoso escolar — sentencia y detalle
-(comando: python -m src.qa --q "acoso escolar" --debug)
-
+```text
 === RESPUESTA ===
 Sobre “acoso escolar”, encontré 2 referencias claras en el archivo.
 
@@ -113,11 +151,12 @@ Sobre “acoso escolar”, encontré 2 referencias claras en el archivo.
 Fuentes:
 • ID T-168/22: dist=0.2691
 • ID T-252/23: dist=0.3387
+```
 
+**PIAR — casos y sentencias**  
+_(comando: `python -m src.qa --q "PIAR" --debug`)_
 
-PIAR — casos y sentencias
-(comando: python -m src.qa --q "PIAR" --debug)
-
+```text
 === RESPUESTA ===
 Sobre “PIAR”, encontré 1 referencias claras en el archivo.
 
@@ -125,11 +164,12 @@ Sobre “PIAR”, encontré 1 referencias claras en el archivo.
 
 Fuentes:
 • ID T-085/23: dist=0.2873
+```
 
+**Redes sociales — ejemplos y sentencias**  
+_(comando: `python -m src.qa --q "redes sociales" --debug`)_
 
-Redes sociales — ejemplos y sentencias
-(comando: python -m src.qa --q "redes sociales" --debug)
-
+```text
 === RESPUESTA ===
 Sobre “redes sociales”, encontré 40 referencias posibles en el archivo. (evidencia débil).
 
@@ -141,24 +181,49 @@ Fuentes:
 • ID T-031/20: dist=0.4207
 • ID T-610/19: dist=0.4319
 • ID T-155/19: dist=0.4694
+```
 
+> **Nota:** en “redes sociales” las distancias son superiores al umbral por defecto (`0.35`), por eso el motor las marca como **evidencia débil**. Para reforzar, puedes subir `retrieval.k` y/o aumentar `distance_max` a `0.40`.
 
-Nota: en “redes sociales” las distancias son superiores al umbral por defecto (0.35), por eso el motor las marca como evidencia débil. Para reforzar, puedes subir retrieval.k y/o aumentar distance_max a 0.40.
+### 5) Futuros ajustes o mejoras
+- **Re-ranking** con cross-encoder para ordenar mejor los hits.
+- **LLM generativo** para redacciones más ricas y verificación de consistencia.
+- **Guardrails**: si no hay evidencia < umbral, devolver “no se encontró evidencia suficiente”.
+- **UI** (Gradio/Streamlit) y **API REST** (FastAPI).
+- **Despliegue** en Azure/AWS (contenedor + volumen para `.chroma`).
+- **Mejoras de datos**: normalización de encabezados/acentos y enriquecimiento con etiquetas.
 
-5) Futuros ajustes o mejoras
+### 6) Apreciaciones y comentarios (opcional)
+La PoC demuestra que, **sin LLM**, ya se logra una búsqueda útil y **explicable** (IDs + distancias), con bajo costo y fácil reproducción.
 
-Re-ranking con cross-encoder para ordenar mejor los hits.
+---
 
-LLM generativo para redacciones más ricas y verificación de consistencia.
+## 🧰 Troubleshooting
 
-Guardrails: si no hay evidencia < umbral, devolver “no se encontró evidencia suficiente”.
+- **No encuentra “síntesis”** → usa exactamente el nombre real (p. ej., `sintesis`) en `text_fields`.
+- **Pocos resultados** → sube `retrieval.k` (10–12) y/o `retrieval.distance_max` (0.40).
+- **IDs duplicados** → el indexador añade sufijos `__<row>` para evitar choques.
+- **Cambiar modelo** → ajusta `embedding_model` en `config.yaml` y re-indexa.
 
-UI (Gradio/Streamlit) y API REST (FastAPI).
+---
 
-Despliegue en Azure/AWS (contenedor + volumen para .chroma).
+## 🗃️ Comandos útiles
 
-Mejoras de datos: normalización de encabezados/acentos y enriquecimiento con etiquetas.
+```bash
+# Re-crear índice desde cero
+if [ -d ".chroma" ]; then rm -rf .chroma; fi
+python -m src.ingest_index
 
-6) Apreciaciones y comentarios 
+# Verificar colección
+python -m src.debug_chroma
 
-La PoC demuestra que, sin LLM, ya se logra una búsqueda útil y explicable (IDs + distancias), con bajo costo y fácil reproducción.
+# Consultas de ejemplo
+python -m src.qa --q "acoso escolar" --debug
+python -m src.qa --q "PIAR" --debug
+python -m src.qa --q "redes sociales" --debug
+```
+
+---
+
+## 📌 Licencia
+Uso interno para evaluación técnica. Ajusta la licencia según tus necesidades.
