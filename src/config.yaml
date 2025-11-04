@@ -11,9 +11,9 @@ chroma:
 embedding_model: "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 
 retrieval:
-  k: 15
-  distance_max: 0.80
+  k: 8
   min_hits: 1
+  distance_max: 0.35          # menor = más estricto
 
 synonyms:
   "acoso escolar": ["bullying","hostigamiento escolar","matoneo"]
