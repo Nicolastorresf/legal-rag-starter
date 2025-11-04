@@ -44,7 +44,6 @@ source .venv/bin/activate
 │  └─ Caso de consultoria 2.pdf
 ├─ Datos/
 │  └─ sentencias_pasadas.xlsx
-├─ Resultados/                  # (opcional) salidas/capturas
 ├─ src/
 │  ├─ config.yaml               # configuración (ruta, modelo, sinónimos, umbrales)
 │  ├─ ingest_index.py           # indexa el Excel en ChromaDB
@@ -226,4 +225,4 @@ python -m src.qa --q "redes sociales" --debug
 ---
 
 ## 📌 Licencia
-Uso interno para evaluación técnica. Ajusta la licencia según tus necesidades.
+Uso interno para evaluación técnica.
