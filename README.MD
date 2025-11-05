@@ -56,9 +56,8 @@ source .venv/bin/activate
 
 ---
 
-## ⚙️ Configuración (resumen)
+## ⚙️ Configuración 
 
-Edita `src/config.yaml` según los nombres reales de tus columnas. Ejemplo:
 
 ```yaml
 data_path: "Datos/sentencias_pasadas.xlsx"
